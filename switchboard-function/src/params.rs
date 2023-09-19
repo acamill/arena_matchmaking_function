@@ -2,12 +2,15 @@ use crate::*;
 
 pub struct ContainerParams {
     pub program_id: Pubkey,
-    pub lower_bound: u32,
-    pub upper_bound: u32,
     pub user: Pubkey,
     pub realm_pda: Pubkey,
     pub user_account_pda: Pubkey,
     pub spaceship_pda: Pubkey,
+    pub opponent_spaceship_1_pda: Pubkey,
+    pub opponent_spaceship_2_pda: Pubkey,
+    pub opponent_spaceship_3_pda: Pubkey,
+    pub opponent_spaceship_4_pda: Pubkey,
+    pub opponent_spaceship_5_pda: Pubkey,
 }
 
 impl ContainerParams {
@@ -15,24 +18,30 @@ impl ContainerParams {
         let params = String::from_utf8(container_params.clone()).unwrap();
 
         let mut program_id: Pubkey = Pubkey::default();
-        let mut lower_bound: u32 = 0;
-        let mut upper_bound: u32 = 0;
         let mut user: Pubkey = Pubkey::default();
         let mut realm_pda: Pubkey = Pubkey::default();
         let mut user_account_pda: Pubkey = Pubkey::default();
         let mut spaceship_pda: Pubkey = Pubkey::default();
+        let mut opponent_spaceship_1_pda: Pubkey = Pubkey::default();
+        let mut opponent_spaceship_2_pda: Pubkey = Pubkey::default();
+        let mut opponent_spaceship_3_pda: Pubkey = Pubkey::default();
+        let mut opponent_spaceship_4_pda: Pubkey = Pubkey::default();
+        let mut opponent_spaceship_5_pda: Pubkey = Pubkey::default();
 
         for env_pair in params.split(',') {
             let pair: Vec<&str> = env_pair.splitn(2, '=').collect();
             if pair.len() == 2 {
                 match pair[0] {
                     "PID" => program_id = Pubkey::from_str(pair[1]).unwrap(),
-                    "LOWER_BOUND" => lower_bound = pair[1].parse::<u32>().unwrap(),
-                    "UPPER_BOUND" => upper_bound = pair[1].parse::<u32>().unwrap(),
                     "USER" => user = Pubkey::from_str(pair[1]).unwrap(),
                     "REALM_PDA" => realm_pda = Pubkey::from_str(pair[1]).unwrap(),
                     "USER_ACCOUNT_PDA" => user_account_pda = Pubkey::from_str(pair[1]).unwrap(),
                     "SPACESHIP_PDA" => spaceship_pda = Pubkey::from_str(pair[1]).unwrap(),
+                    "OS_1_PDA" => opponent_spaceship_1_pda = Pubkey::from_str(pair[1]).unwrap(),
+                    "OS_2_PDA" => opponent_spaceship_2_pda = Pubkey::from_str(pair[1]).unwrap(),
+                    "OS_3_PDA" => opponent_spaceship_3_pda = Pubkey::from_str(pair[1]).unwrap(),
+                    "OS_4_PDA" => opponent_spaceship_4_pda = Pubkey::from_str(pair[1]).unwrap(),
+                    "OS_5_PDA" => opponent_spaceship_5_pda = Pubkey::from_str(pair[1]).unwrap(),
                     _ => {}
                 }
             }
@@ -41,11 +50,6 @@ impl ContainerParams {
         if program_id == Pubkey::default() {
             return Err(SwitchboardClientError::CustomMessage(
                 "PID cannot be undefined".to_string(),
-            ));
-        }
-        if upper_bound == 0 {
-            return Err(SwitchboardClientError::CustomMessage(
-                "MAX_GUESS must be greater than 0".to_string(),
             ));
         }
         if user == Pubkey::default() {
@@ -68,15 +72,43 @@ impl ContainerParams {
                 "SPACESHIP_PDA cannot be undefined".to_string(),
             ));
         }
+        if opponent_spaceship_1_pda == Pubkey::default() {
+            return Err(SwitchboardClientError::CustomMessage(
+                "OS_1_PDA cannot be undefined".to_string(),
+            ));
+        }
+        if opponent_spaceship_2_pda == Pubkey::default() {
+            return Err(SwitchboardClientError::CustomMessage(
+                "OS_2_PDA cannot be undefined".to_string(),
+            ));
+        }
+        if opponent_spaceship_3_pda == Pubkey::default() {
+            return Err(SwitchboardClientError::CustomMessage(
+                "OS_3_PDA cannot be undefined".to_string(),
+            ));
+        }
+        if opponent_spaceship_4_pda == Pubkey::default() {
+            return Err(SwitchboardClientError::CustomMessage(
+                "OS_4_PDA cannot be undefined".to_string(),
+            ));
+        }
+        if opponent_spaceship_5_pda == Pubkey::default() {
+            return Err(SwitchboardClientError::CustomMessage(
+                "OS_5_PDA cannot be undefined".to_string(),
+            ));
+        }
 
         Ok(Self {
             program_id,
-            lower_bound,
-            upper_bound,
             user,
             realm_pda,
             user_account_pda,
             spaceship_pda,
+            opponent_spaceship_1_pda,
+            opponent_spaceship_2_pda,
+            opponent_spaceship_3_pda,
+            opponent_spaceship_4_pda,
+            opponent_spaceship_5_pda,
         })
     }
 }
@@ -88,25 +120,31 @@ mod tests {
     #[test]
     fn test_params_decode() {
         let request_params_string = format!(
-            "PID={},LOWER_BOUND={},UPPER_BOUND={},USER={},REALM_PDA={},USER_ACCOUNT_PDA={},SPACESHIP_PDA={}",
-            anchor_spl::token::ID,
-            0,
-            18_000,
+            "PID={},USER={},REALM_PDA={},USER_ACCOUNT_PDA={},SPACESHIP_PDA={},OS_1_PDA={},OS_2_PDA={},OS_3_PDA={},OS_4_PDA={},OS_5_PDA={}",
             anchor_spl::token::ID,
             anchor_spl::token::ID,
             anchor_spl::token::ID,
-            anchor_spl::token::ID
+            anchor_spl::token::ID,
+            anchor_spl::token::ID,
+            anchor_spl::token::ID,
+            anchor_spl::token::ID,
+            anchor_spl::token::ID,
+            anchor_spl::token::ID,
+            anchor_spl::token::ID,
         );
         let request_params_bytes = request_params_string.into_bytes();
 
         let params = ContainerParams::decode(&request_params_bytes).unwrap();
 
         assert_eq!(params.program_id, anchor_spl::token::ID);
-        assert_eq!(params.lower_bound, 0);
-        assert_eq!(params.upper_bound, 18_000);
         assert_eq!(params.user, anchor_spl::token::ID);
         assert_eq!(params.realm_pda, anchor_spl::token::ID);
         assert_eq!(params.user_account_pda, anchor_spl::token::ID);
         assert_eq!(params.spaceship_pda, anchor_spl::token::ID);
+        assert_eq!(params.opponent_spaceship_1_pda, anchor_spl::token::ID);
+        assert_eq!(params.opponent_spaceship_2_pda, anchor_spl::token::ID);
+        assert_eq!(params.opponent_spaceship_3_pda, anchor_spl::token::ID);
+        assert_eq!(params.opponent_spaceship_4_pda, anchor_spl::token::ID);
+        assert_eq!(params.opponent_spaceship_5_pda, anchor_spl::token::ID);
     }
 }

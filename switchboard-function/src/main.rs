@@ -1,10 +1,9 @@
+pub use params::*;
 use std::str::FromStr;
-
 pub use switchboard_solana::get_ixn_discriminator;
 pub use switchboard_solana::prelude::*;
 
 mod params;
-pub use params::*;
 
 #[tokio::main(worker_threads = 12)]
 async fn main() {
@@ -22,24 +21,25 @@ async fn main() {
     .unwrap();
 
     // Generate our random result
-    let random_result = generate_randomness(params.lower_bound, params.upper_bound);
+    let random_result = generate_randomness(u32::MIN, u32::MAX);
     let mut random_bytes = random_result.to_le_bytes().to_vec();
 
     // IXN DATA:
     // LEN: 12 bytes
     // [0-8]: Anchor Ixn Discriminator
     // [9-12]: Random Result as u32
-    let mut ixn_data = get_ixn_discriminator("create_spaceship_settle").to_vec();
+    let mut ixn_data = get_ixn_discriminator("arena_matchmaking_settle").to_vec();
     ixn_data.append(&mut random_bytes);
 
     // ACCOUNTS:
-    // 1. User: our user who made the request
-    // 2. Enclave Signer (signer): our Gramine generated keypair
+    // 1. Enclave Signer (signer): our Gramine generated keypair
+    // 2. User: our user who made the request
     // 3. Realm
     // 4. User Account PDA
     // 5. Spaceship PDA (mut)
-    // 6. Switchboard Function
+    // 6. Switchboard Function (arena_matchmaking_function)
     // 7. Switchboard Function Request
+    // remaining accounts: the spaceship that are potentially being matched with
     let settle_ixn = Instruction {
         program_id: params.program_id,
         data: ixn_data,
@@ -51,6 +51,12 @@ async fn main() {
             AccountMeta::new(params.spaceship_pda, false),
             AccountMeta::new_readonly(runner.function, false),
             AccountMeta::new_readonly(runner.function_request_key.unwrap(), false),
+            // remaining accounts
+            AccountMeta::new(params.opponent_spaceship_1_pda, false),
+            AccountMeta::new(params.opponent_spaceship_2_pda, false),
+            AccountMeta::new(params.opponent_spaceship_3_pda, false),
+            AccountMeta::new(params.opponent_spaceship_4_pda, false),
+            AccountMeta::new(params.opponent_spaceship_5_pda, false),
         ],
     };
 
