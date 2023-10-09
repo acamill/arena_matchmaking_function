@@ -15,7 +15,7 @@ pub struct ContainerParams {
 }
 
 impl ContainerParams {
-    pub fn decode(container_params: &Vec<u8>) -> std::result::Result<Self, SwitchboardClientError> {
+    pub fn decode(container_params: &Vec<u8>) -> std::result::Result<Self, SwitchboardError> {
         let params = String::from_utf8(container_params.clone()).unwrap();
 
         let mut program_id: Pubkey = Pubkey::default();
@@ -51,54 +51,34 @@ impl ContainerParams {
         }
 
         if program_id == Pubkey::default() {
-            return Err(SwitchboardClientError::CustomMessage(
-                "PID cannot be undefined".to_string(),
-            ));
+            return Err(SwitchboardError::InvalidFunctionInput);
         }
         if user == Pubkey::default() {
-            return Err(SwitchboardClientError::CustomMessage(
-                "USER cannot be undefined".to_string(),
-            ));
+            return Err(SwitchboardError::InvalidFunctionInput);
         }
         if realm_pda == Pubkey::default() {
-            return Err(SwitchboardClientError::CustomMessage(
-                "REALM_PDA cannot be undefined".to_string(),
-            ));
+            return Err(SwitchboardError::InvalidFunctionInput);
         }
         if user_account_pda == Pubkey::default() {
-            return Err(SwitchboardClientError::CustomMessage(
-                "USER_ACCOUNT_PDA cannot be undefined".to_string(),
-            ));
+            return Err(SwitchboardError::InvalidFunctionInput);
         }
         if spaceship_pda == Pubkey::default() {
-            return Err(SwitchboardClientError::CustomMessage(
-                "SPACESHIP_PDA cannot be undefined".to_string(),
-            ));
+            return Err(SwitchboardError::InvalidFunctionInput);
         }
         if opponent_spaceship_1_pda == Pubkey::default() {
-            return Err(SwitchboardClientError::CustomMessage(
-                "OS_1_PDA cannot be undefined".to_string(),
-            ));
+            return Err(SwitchboardError::InvalidFunctionInput);
         }
         if opponent_spaceship_2_pda == Pubkey::default() {
-            return Err(SwitchboardClientError::CustomMessage(
-                "OS_2_PDA cannot be undefined".to_string(),
-            ));
+            return Err(SwitchboardError::InvalidFunctionInput);
         }
         if opponent_spaceship_3_pda == Pubkey::default() {
-            return Err(SwitchboardClientError::CustomMessage(
-                "OS_3_PDA cannot be undefined".to_string(),
-            ));
+            return Err(SwitchboardError::InvalidFunctionInput);
         }
         if opponent_spaceship_4_pda == Pubkey::default() {
-            return Err(SwitchboardClientError::CustomMessage(
-                "OS_4_PDA cannot be undefined".to_string(),
-            ));
+            return Err(SwitchboardError::InvalidFunctionInput);
         }
         if opponent_spaceship_5_pda == Pubkey::default() {
-            return Err(SwitchboardClientError::CustomMessage(
-                "OS_5_PDA cannot be undefined".to_string(),
-            ));
+            return Err(SwitchboardError::InvalidFunctionInput);
         }
 
         Ok(Self {

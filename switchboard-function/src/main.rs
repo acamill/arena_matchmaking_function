@@ -11,17 +11,22 @@ async fn main() {
     let runner = FunctionRunner::new_from_cluster(Cluster::Devnet, None).unwrap();
 
     // parse and validate user provided request params
-    let params = ContainerParams::decode(
-        &runner
-            .function_request_data
-            .as_ref()
-            .unwrap()
-            .container_params,
-    )
-    .unwrap();
+    let params = match runner.function_request_data.as_ref() {
+        Some(data) => match ContainerParams::decode(&data.container_params) {
+            Ok(params) => params,
+            Err(_error) => {
+                let _ = runner.emit_error(1).await;
+                return;
+            }
+        },
+        None => {
+            let _ = runner.emit_error(2).await;
+            return;
+        }
+    };
 
     // Generate our random result
-    let random_result = generate_randomness(u32::MIN, u32::MAX);
+    let random_result = generate_randomness(1, u32::MAX);
     let mut random_bytes = random_result.to_le_bytes().to_vec();
 
     // IXN DATA:
@@ -75,7 +80,13 @@ async fn main() {
 
     // Finally, emit the signed quote and partially signed transaction to the functionRunner oracle
     // The functionRunner oracle will use the last outputted word to stdout as the serialized result. This is what gets executed on-chain.
-    runner.emit(ixs).await.unwrap();
+    match runner.emit(ixs).await {
+        Ok(_) => (),
+        Err(_error) => {
+            let _ = runner.emit_error(3).await;
+            return;
+        }
+    };
 }
 
 fn generate_randomness(min: u32, max: u32) -> u32 {
