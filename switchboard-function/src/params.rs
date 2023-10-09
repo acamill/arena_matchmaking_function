@@ -6,6 +6,7 @@ pub struct ContainerParams {
     pub realm_pda: Pubkey,
     pub user_account_pda: Pubkey,
     pub spaceship_pda: Pubkey,
+    pub faction: u8,
     pub opponent_spaceship_1_pda: Pubkey,
     pub opponent_spaceship_2_pda: Pubkey,
     pub opponent_spaceship_3_pda: Pubkey,
@@ -22,6 +23,7 @@ impl ContainerParams {
         let mut realm_pda: Pubkey = Pubkey::default();
         let mut user_account_pda: Pubkey = Pubkey::default();
         let mut spaceship_pda: Pubkey = Pubkey::default();
+        let mut faction: u8 = 0;
         let mut opponent_spaceship_1_pda: Pubkey = Pubkey::default();
         let mut opponent_spaceship_2_pda: Pubkey = Pubkey::default();
         let mut opponent_spaceship_3_pda: Pubkey = Pubkey::default();
@@ -37,6 +39,7 @@ impl ContainerParams {
                     "REALM_PDA" => realm_pda = Pubkey::from_str(pair[1]).unwrap(),
                     "USER_ACCOUNT_PDA" => user_account_pda = Pubkey::from_str(pair[1]).unwrap(),
                     "SPACESHIP_PDA" => spaceship_pda = Pubkey::from_str(pair[1]).unwrap(),
+                    "FACTION" => faction = pair[1].parse::<u8>().unwrap(),
                     "OS_1_PDA" => opponent_spaceship_1_pda = Pubkey::from_str(pair[1]).unwrap(),
                     "OS_2_PDA" => opponent_spaceship_2_pda = Pubkey::from_str(pair[1]).unwrap(),
                     "OS_3_PDA" => opponent_spaceship_3_pda = Pubkey::from_str(pair[1]).unwrap(),
@@ -104,6 +107,7 @@ impl ContainerParams {
             realm_pda,
             user_account_pda,
             spaceship_pda,
+            faction,
             opponent_spaceship_1_pda,
             opponent_spaceship_2_pda,
             opponent_spaceship_3_pda,
@@ -120,12 +124,13 @@ mod tests {
     #[test]
     fn test_params_decode() {
         let request_params_string = format!(
-            "PID={},USER={},REALM_PDA={},USER_ACCOUNT_PDA={},SPACESHIP_PDA={},OS_1_PDA={},OS_2_PDA={},OS_3_PDA={},OS_4_PDA={},OS_5_PDA={}",
+            "PID={},USER={},REALM_PDA={},USER_ACCOUNT_PDA={},SPACESHIP_PDA={},FACTION={},OS_1_PDA={},OS_2_PDA={},OS_3_PDA={},OS_4_PDA={},OS_5_PDA={}",
             anchor_spl::token::ID,
             anchor_spl::token::ID,
             anchor_spl::token::ID,
             anchor_spl::token::ID,
             anchor_spl::token::ID,
+            0,
             anchor_spl::token::ID,
             anchor_spl::token::ID,
             anchor_spl::token::ID,
@@ -141,6 +146,7 @@ mod tests {
         assert_eq!(params.realm_pda, anchor_spl::token::ID);
         assert_eq!(params.user_account_pda, anchor_spl::token::ID);
         assert_eq!(params.spaceship_pda, anchor_spl::token::ID);
+        assert_eq!(params.faction, 0);
         assert_eq!(params.opponent_spaceship_1_pda, anchor_spl::token::ID);
         assert_eq!(params.opponent_spaceship_2_pda, anchor_spl::token::ID);
         assert_eq!(params.opponent_spaceship_3_pda, anchor_spl::token::ID);

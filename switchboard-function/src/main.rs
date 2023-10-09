@@ -28,8 +28,10 @@ async fn main() {
     // LEN: 12 bytes
     // [0-8]: Anchor Ixn Discriminator
     // [9-12]: Random Result as u32
+    // [13]: Faction as u8
     let mut ixn_data = get_ixn_discriminator("arena_matchmaking_settle").to_vec();
     ixn_data.append(&mut random_bytes);
+    ixn_data.append(&mut params.faction.to_le_bytes().to_vec());
 
     // ACCOUNTS:
     // 1. Enclave Signer (signer): our Gramine generated keypair
@@ -39,14 +41,14 @@ async fn main() {
     // 5. Spaceship PDA (mut)
     // 6. Switchboard Function (arena_matchmaking_function)
     // 7. Switchboard Function Request
-    // remaining accounts: the spaceship that are potentially being matched with
+    // 8-9-10-11-12. the spaceships that are potentially being matched with the spaceship_pda
     let settle_ixn = Instruction {
         program_id: params.program_id,
         data: ixn_data,
         accounts: vec![
             AccountMeta::new_readonly(runner.signer, true),
             AccountMeta::new_readonly(params.user, false),
-            AccountMeta::new_readonly(params.realm_pda, false),
+            AccountMeta::new(params.realm_pda, false),
             AccountMeta::new_readonly(params.user_account_pda, false),
             AccountMeta::new(params.spaceship_pda, false),
             AccountMeta::new_readonly(runner.function, false),
@@ -60,9 +62,16 @@ async fn main() {
         ],
     };
 
+    let increase_compute_budget_ix = Instruction::new_with_borsh(
+        solana_sdk::compute_budget::id(),
+        &solana_sdk::compute_budget::ComputeBudgetInstruction::SetComputeUnitLimit(1_400_000),
+        vec![],
+    );
+
     // Then, write your own Rust logic and build a Vec of instructions.
     // Should  be under 700 bytes after serialization
-    let ixs: Vec<solana_program::instruction::Instruction> = vec![settle_ixn];
+    let ixs: Vec<solana_program::instruction::Instruction> =
+        vec![increase_compute_budget_ix, settle_ixn];
 
     // Finally, emit the signed quote and partially signed transaction to the functionRunner oracle
     // The functionRunner oracle will use the last outputted word to stdout as the serialized result. This is what gets executed on-chain.
