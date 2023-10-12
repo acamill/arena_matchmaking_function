@@ -11,19 +11,19 @@ async fn main() {
     let runner = FunctionRunner::new_from_cluster(Cluster::Devnet, None).unwrap();
 
     // parse and validate user provided request params
-    let params = match runner.function_request_data.as_ref() {
-        Some(data) => match ContainerParams::decode(&data.container_params) {
-            Ok(params) => params,
-            Err(_error) => {
-                let _ = runner.emit_error(1).await;
-                return;
-            }
-        },
-        None => {
-            let _ = runner.emit_error(2).await;
-            return;
-        }
-    };
+    let maybe_params = ContainerParams::decode(
+        &runner
+            .function_request_data
+            .as_ref()
+            .unwrap()
+            .container_params,
+    );
+
+    if maybe_params.is_err() {
+        runner.emit_error(1).await.unwrap();
+        return;
+    }
+    let params = maybe_params.unwrap();
 
     // Generate our random result
     let random_result = generate_randomness(1, u32::MAX);
@@ -36,7 +36,7 @@ async fn main() {
     // [13]: Faction as u8
     let mut ixn_data = get_ixn_discriminator("arena_matchmaking_settle").to_vec();
     ixn_data.append(&mut random_bytes);
-    ixn_data.append(&mut params.faction.to_le_bytes().to_vec());
+    ixn_data.push(params.faction);
 
     // ACCOUNTS:
     // 1. Enclave Signer (signer): our Gramine generated keypair
@@ -67,16 +67,20 @@ async fn main() {
         ],
     };
 
-    let increase_compute_budget_ix = Instruction::new_with_borsh(
-        solana_sdk::compute_budget::id(),
-        &solana_sdk::compute_budget::ComputeBudgetInstruction::SetComputeUnitLimit(1_400_000),
-        vec![],
-    );
+    // let increase_compute_budget_ix = Instruction::new_with_borsh(
+    //     solana_sdk::compute_budget::id(),
+    //     &solana_sdk::compute_budget::ComputeBudgetInstruction::SetComputeUnitLimit(1_400_000),
+    //     vec![],
+    // );
+
+    // // Then, write your own Rust logic and build a Vec of instructions.
+    // // Should  be under 700 bytes after serialization
+    // let ixs: Vec<solana_program::instruction::Instruction> =
+    //     vec![increase_compute_budget_ix, settle_ixn];
 
     // Then, write your own Rust logic and build a Vec of instructions.
     // Should  be under 700 bytes after serialization
-    let ixs: Vec<solana_program::instruction::Instruction> =
-        vec![increase_compute_budget_ix, settle_ixn];
+    let ixs: Vec<solana_program::instruction::Instruction> = vec![settle_ixn];
 
     // Finally, emit the signed quote and partially signed transaction to the functionRunner oracle
     // The functionRunner oracle will use the last outputted word to stdout as the serialized result. This is what gets executed on-chain.
@@ -156,5 +160,19 @@ mod tests {
         for count in counts.iter() {
             assert!(*count > 0);
         }
+    }
+
+    #[test]
+    fn test_generate_randomness_and_encode() {
+        let faction = 1u8;
+        let min = 0;
+        let max = 10000;
+
+        let result = generate_randomness(min, max);
+        let mut random_bytes = result.to_le_bytes().to_vec();
+
+        let mut ixn_data = get_ixn_discriminator("arena_matchmaking_settle").to_vec();
+        ixn_data.append(&mut random_bytes);
+        ixn_data.append(&mut faction.to_le_bytes().to_vec());
     }
 }

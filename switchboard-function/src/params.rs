@@ -110,7 +110,7 @@ mod tests {
             anchor_spl::token::ID,
             anchor_spl::token::ID,
             anchor_spl::token::ID,
-            0,
+            1,
             anchor_spl::token::ID,
             anchor_spl::token::ID,
             anchor_spl::token::ID,
@@ -126,7 +126,7 @@ mod tests {
         assert_eq!(params.realm_pda, anchor_spl::token::ID);
         assert_eq!(params.user_account_pda, anchor_spl::token::ID);
         assert_eq!(params.spaceship_pda, anchor_spl::token::ID);
-        assert_eq!(params.faction, 0);
+        assert_eq!(params.faction, 1);
         assert_eq!(params.opponent_spaceship_1_pda, anchor_spl::token::ID);
         assert_eq!(params.opponent_spaceship_2_pda, anchor_spl::token::ID);
         assert_eq!(params.opponent_spaceship_3_pda, anchor_spl::token::ID);
