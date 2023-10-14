@@ -26,11 +26,11 @@ async fn main() {
     let params = maybe_params.unwrap();
 
     // Generate our random result
-    let random_result = generate_randomness(1, u32::MAX);
+    let random_result = generate_randomness(1, 100_000);
     let mut random_bytes = random_result.to_le_bytes().to_vec();
 
     // IXN DATA:
-    // LEN: 12 bytes
+    // LEN: 13 bytes
     // [0-8]: Anchor Ixn Discriminator
     // [9-12]: Random Result as u32
     // [13]: Faction as u8
@@ -58,7 +58,6 @@ async fn main() {
             AccountMeta::new(params.spaceship_pda, false),
             AccountMeta::new_readonly(runner.function, false),
             AccountMeta::new_readonly(runner.function_request_key.unwrap(), false),
-            // remaining accounts
             AccountMeta::new(params.opponent_spaceship_1_pda, false),
             AccountMeta::new(params.opponent_spaceship_2_pda, false),
             AccountMeta::new(params.opponent_spaceship_3_pda, false),
@@ -67,20 +66,16 @@ async fn main() {
         ],
     };
 
-    // let increase_compute_budget_ix = Instruction::new_with_borsh(
-    //     solana_sdk::compute_budget::id(),
-    //     &solana_sdk::compute_budget::ComputeBudgetInstruction::SetComputeUnitLimit(1_400_000),
-    //     vec![],
-    // );
-
-    // // Then, write your own Rust logic and build a Vec of instructions.
-    // // Should  be under 700 bytes after serialization
-    // let ixs: Vec<solana_program::instruction::Instruction> =
-    //     vec![increase_compute_budget_ix, settle_ixn];
+    let increase_compute_budget_ix = Instruction::new_with_borsh(
+        solana_sdk::compute_budget::id(),
+        &solana_sdk::compute_budget::ComputeBudgetInstruction::SetComputeUnitLimit(1_200_000),
+        vec![],
+    );
 
     // Then, write your own Rust logic and build a Vec of instructions.
     // Should  be under 700 bytes after serialization
-    let ixs: Vec<solana_program::instruction::Instruction> = vec![settle_ixn];
+    let ixs: Vec<solana_program::instruction::Instruction> =
+        vec![increase_compute_budget_ix, settle_ixn];
 
     // Finally, emit the signed quote and partially signed transaction to the functionRunner oracle
     // The functionRunner oracle will use the last outputted word to stdout as the serialized result. This is what gets executed on-chain.
@@ -173,6 +168,7 @@ mod tests {
 
         let mut ixn_data = get_ixn_discriminator("arena_matchmaking_settle").to_vec();
         ixn_data.append(&mut random_bytes);
-        ixn_data.append(&mut faction.to_le_bytes().to_vec());
+        ixn_data.push(faction);
+        // ixn_data.append(&mut faction.to_le_bytes().to_vec());
     }
 }
